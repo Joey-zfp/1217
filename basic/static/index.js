@@ -4,9 +4,9 @@ document.getElementById("ask-btn").addEventListener("click", function() {
     fetch('/get_response', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({ user_input: '請問 AI 是什麼？' })
+        body: JSON.stringify({ user_input: '請問 AI 是什麼？' })
     })
     .then(response => response.json())
     .then(data => {
