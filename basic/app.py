@@ -7,29 +7,31 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain_community.callbacks import get_openai_callback
 from langchain_openai import ChatOpenAI
 from opencc import OpenCC
-from docx import Document as DocxDocument  # 避免名稱衝突
-from langchain.schema import Document  # 新增 Document
-
-import openai  # ✅ 確認有匯入 openai
+from docx import Document
 
 # 載入 .env 環境變數
 load_dotenv()
 
-# 設定 OpenAI API 金鑰
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# 設定 OpenAI API Key
+openai_api_key = os.getenv('OPENAI_API_KEY')
+if not openai_api_key:
+    raise ValueError("OPENAI_API_KEY is not set in environment variables.")
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 chat_history = []
 
-# 載入 docx 文件
+# 載入 data.docx 內容
 def load_docx_content(file_path):
-    doc = DocxDocument(file_path)
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
+    doc = Document(file_path)
     text = ''
     for para in doc.paragraphs:
         text += para.text + '\n'
     return text
 
-database_content = load_docx_content('basic/data.docx')  # 確保路徑正確
+# 確保讀取正確的路徑
+database_content = load_docx_content(os.path.join(os.path.dirname(__file__), 'data.docx'))
 
 @app.route('/')
 def index():
@@ -42,7 +44,14 @@ def get_response():
         if not user_input:
             return jsonify({'error': 'No user input provided'})
 
-        docs = [Document(page_content=database_content)]
+        # 簡單關鍵字搜尋
+        if user_input.lower() in database_content.lower():
+            return jsonify({'response': f'找到相關內容：{user_input}'})
+
+        # 使用 GPT-4o 進行更深入的回答
+        embeddings = OpenAIEmbeddings()
+        db = Chroma(persist_directory="./db/temp/", embedding_function=embeddings)
+        docs = db.similarity_search(user_input)
 
         llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5)
         chain = load_qa_chain(llm, chain_type="stuff")
