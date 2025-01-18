@@ -48,12 +48,17 @@ def get_response():
         if user_input.lower() in database_content.lower():
             return jsonify({'response': f'找到相關內容：{user_input}'})
 
+        # 資料庫初始化
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'temp')
+        if not os.path.exists(db_path):
+            os.makedirs(db_path)
+
         # 使用 GPT-4o 進行更深入的回答
-        embeddings = OpenAIEmbeddings()
-        db = Chroma(persist_directory="./db/temp/", embedding_function=embeddings)
+        embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+        db = Chroma(persist_directory=db_path, embedding_function=embeddings)
         docs = db.similarity_search(user_input)
 
-        llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5)
+        llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5, api_key=openai_api_key)
         chain = load_qa_chain(llm, chain_type="stuff")
 
         with get_openai_callback() as cb:
