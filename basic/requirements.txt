@@ -1,3 +1,9 @@
 flask
 gunicorn
 python-dotenv
+openai
+langchain
+langchain-community
+langchain-openai
+chromadb
+opencc-python-reimplemented
