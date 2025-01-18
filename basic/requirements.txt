@@ -7,3 +7,4 @@ langchain-community
 langchain-openai
 chromadb
 opencc-python-reimplemented
+python-docx
