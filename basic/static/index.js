@@ -1,25 +1,28 @@
-const container = document.querySelector(".container");
-
 document.getElementById("ask-btn").addEventListener("click", function() {
+    const userInput = document.getElementById("user-input").value;
+
+    if (!userInput) {
+        alert("請輸入問題！");
+        return;
+    }
+
     fetch('/get_response', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_input: '請問 AI 是什麼？' })  // 確保是 JSON 格式
+        body: JSON.stringify({ user_input: userInput })  // 傳送使用者輸入
     })
     .then(response => response.json())
     .then(data => {
+        const responseDiv = document.getElementById("response");
         if (data.response) {
-            container.innerHTML += `<p>${data.response}</p>`;
+            responseDiv.innerHTML = `<p>${data.response}</p>`;
         } else if (data.error) {
-            container.innerHTML += `<p style="color: red;">錯誤：${data.error}</p>`;
-        } else {
-            container.innerHTML += `<p style="color: red;">未知錯誤</p>`;
+            responseDiv.innerHTML = `<p style="color: red;">錯誤：${data.error}</p>`;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        container.innerHTML += `<p style="color: red;">連線錯誤</p>`;
     });
 });
