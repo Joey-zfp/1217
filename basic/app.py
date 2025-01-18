@@ -8,15 +8,20 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_openai import ChatOpenAI
 from opencc import OpenCC
 from docx import Document as DocxDocument  # 避免名稱衝突
-from langchain.schema import Document  # ✅ 新增這行
+from langchain.schema import Document  # 新增 Document
 
+import openai  # ✅ 確認有匯入 openai
+
+# 載入 .env 環境變數
 load_dotenv()
+
+# 設定 OpenAI API 金鑰
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 chat_history = []
 
-# 載入 docx 檔案
+# 載入 docx 文件
 def load_docx_content(file_path):
     doc = DocxDocument(file_path)
     text = ''
@@ -24,7 +29,7 @@ def load_docx_content(file_path):
         text += para.text + '\n'
     return text
 
-database_content = load_docx_content('basic/data.docx')  # 確保檔案路徑正確
+database_content = load_docx_content('basic/data.docx')  # 確保路徑正確
 
 @app.route('/')
 def index():
@@ -37,7 +42,6 @@ def get_response():
         if not user_input:
             return jsonify({'error': 'No user input provided'})
 
-        # 將內容包裝成 Document 物件
         docs = [Document(page_content=database_content)]
 
         llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5)
