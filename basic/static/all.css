@@ -1,0 +1,8 @@
+.container{
+    max-width: 1024px;
+    margin: 0 auto;
+}
+.container p{
+    font-size: 20px;
+    color: teal;
+}
