@@ -1,21 +1,18 @@
 const container = document.querySelector(".container");
 
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/hello', {
-    method: 'POST', // 使用 POST 請求
-    headers: {
-    'Content-Type': 'text/plain',
-    },
-    body: JSON.stringify({}) // 要傳遞的訊息
+document.getElementById("ask-btn").addEventListener("click", function() {
+    fetch('/get_response', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ user_input: '請問 AI 是什麼？' })
     })
     .then(response => response.json())
     .then(data => {
-    // 後端返回的訊息之後的動作
-        container.innerHTML = `<p>${data.message}</p>`;
+        container.innerHTML += `<p>${data.response}</p>`;
     })
     .catch(error => {
-   //例外錯誤狀況處理
-    console.error('Error:', error);
+        console.error('Error:', error);
     });
 });
-   
