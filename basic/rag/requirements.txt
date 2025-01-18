@@ -1,9 +1,0 @@
-Flask
-langchain
-openai
-chromadb
-opencc-python-reimplemented
-tiktoken
-langchain-openai
-langchain-community
-python-dotenv
