@@ -22,9 +22,16 @@ def index():
 @app.route('/get_response', methods=['POST'])
 def get_response():
     try:
-        user_input = request.json.get('user_input')
+        user_input = request.json.get('user_input')  # 確認用 JSON 接收
         if not user_input:
             return jsonify({'error': 'No user input provided'})
+
+        # 模擬簡單回應，先測試是否正常
+        return jsonify({'response': f'你問了：「{user_input}」'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 
         embeddings = OpenAIEmbeddings()
         db = Chroma(persist_directory="./db/temp/", embedding_function=embeddings)
