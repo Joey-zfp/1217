@@ -6,3 +6,4 @@ opencc-python-reimplemented
 tiktoken
 langchain-openai
 langchain-community
+python-dotenv
