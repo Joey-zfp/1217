@@ -7,7 +7,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain_community.callbacks import get_openai_callback
 from langchain_openai import ChatOpenAI
 from opencc import OpenCC
-from docx import Document  # 新增 docx 支援
+from docx import Document
 import openai
 
 load_dotenv()
@@ -16,8 +16,15 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 app = Flask(__name__, static_folder='static', template_folder='templates')
 chat_history = []
 
-# 🔥 載入 data.docx 內容
+# 🔥 修正路徑讀取 data.docx
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DOCX_PATH = os.path.join(BASE_DIR, '..', 'data.docx')  # 調整路徑
+
 def load_docx_content(file_path):
+    if not os.path.exists(file_path):
+        print(f"⚠️ 檔案不存在：{file_path}")
+        return "❌ 無法載入資料，請確認檔案是否存在。"
+    
     doc = Document(file_path)
     text = ''
     for para in doc.paragraphs:
@@ -25,7 +32,7 @@ def load_docx_content(file_path):
     return text
 
 # 🔥 資料庫內容
-database_content = load_docx_content('data.docx')
+database_content = load_docx_content(DOCX_PATH)
 
 @app.route('/')
 def index():
@@ -41,7 +48,7 @@ def get_response():
         # 🔍 簡單的關鍵字搜尋
         if user_input.lower() in database_content.lower():
             return jsonify({'response': f'找到相關內容：{user_input}'})
-        
+
         # 🧠 使用 GPT-4o 更深入回答
         llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5)
         chain = load_qa_chain(llm, chain_type="stuff")
