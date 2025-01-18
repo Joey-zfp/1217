@@ -17,8 +17,12 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 chat_history = []
 
 # 🔥 修正路徑讀取 data.docx
+# 修正路徑：讀取 data.docx（無論檔案在哪個環境）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DOCX_PATH = os.path.join(BASE_DIR, '..', 'data.docx')  # 調整路徑
+DOCX_PATH = os.path.join(BASE_DIR, '..', 'data.docx')  # 回到專案根目錄讀取
+
+# 載入 data.docx 內容
+database_content = load_docx_content(DOCX_PATH)
 
 def load_docx_content(file_path):
     if not os.path.exists(file_path):
