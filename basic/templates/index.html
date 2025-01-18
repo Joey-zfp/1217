@@ -8,8 +8,10 @@
 <body>
     <div class="container">
         <h1>歡迎使用 QA 系統</h1>
+        <input type="text" id="user-input" placeholder="請輸入你的問題">
         <button id="ask-btn">詢問問題</button>
+        <div id="response"></div>
     </div>
-    <script src="{{ url_for('static', filename='index.js') }}"></script>
+    <script src="/static/index.js"></script>
 </body>
 </html>
