@@ -31,7 +31,7 @@ def load_docx_content(file_path):
     return text
 
 # 確保讀取正確的路徑
-database_content = load_docx_content(os.path.join(os.path.dirname(__file__), 'basic', 'data.docx'))
+database_content = load_docx_content(os.path.join(os.path.dirname(__file__), 'data.docx'))
 
 @app.route('/')
 def index():
