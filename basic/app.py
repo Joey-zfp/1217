@@ -30,8 +30,12 @@ def load_docx_content(file_path):
         text += para.text + '\n'
     return text
 
-# 確保讀取正確的路徑
-database_content = load_docx_content(os.path.join(os.path.dirname(__file__), 'data.docx'))
+# 檢查文件是否存在
+data_docx_path = os.path.join(os.path.dirname(__file__), 'data.docx')
+if not os.path.exists(data_docx_path):
+    print(f"Error: 'data.docx' not found at {data_docx_path}")
+else:
+    print(f"'data.docx' found at {data_docx_path}")
 
 @app.route('/')
 def index():
