@@ -30,12 +30,19 @@ def load_docx_content(file_path):
         text += para.text + '\n'
     return text
 
-# 檢查文件是否存在
+# 檢查並載入 data.docx
 data_docx_path = os.path.join(os.path.dirname(__file__), 'data.docx')
 if not os.path.exists(data_docx_path):
     print(f"Error: 'data.docx' not found at {data_docx_path}")
+    database_content = ""  # 如果文件不存在，設置為空字串
 else:
     print(f"'data.docx' found at {data_docx_path}")
+    try:
+        database_content = load_docx_content(data_docx_path)
+        print("Successfully loaded database content.")
+    except Exception as e:
+        print(f"Error loading 'data.docx': {e}")
+        database_content = ""
 
 @app.route('/')
 def index():
