@@ -3,8 +3,7 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain.chains.question_answering import load_qa_chain
-from langchain_community.callbacks import get_openai_callback
+from langchain_community.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from opencc import OpenCC
 from docx import Document
@@ -18,31 +17,27 @@ if not openai_api_key:
     raise ValueError("OPENAI_API_KEY is not set in environment variables.")
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-chat_history = []
 
-# 載入 data.docx 內容
-def load_docx_content(file_path):
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File not found: {file_path}")
-    doc = Document(file_path)
-    text = ''
-    for para in doc.paragraphs:
-        text += para.text + '\n'
-    return text
+# 初始化資料庫與嵌入模型
+db_path = os.path.join(os.path.dirname(__file__), 'db', 'temp')
+if not os.path.exists(db_path):
+    os.makedirs(db_path)
 
-# 檢查並載入 data.docx
+embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+vectorstore = Chroma(persist_directory=db_path, embedding_function=embeddings)
+
+# 載入 data.docx 並嵌入到向量資料庫
 data_docx_path = os.path.join(os.path.dirname(__file__), 'data.docx')
-if not os.path.exists(data_docx_path):
-    print(f"Error: 'data.docx' not found at {data_docx_path}")
-    database_content = ""  # 如果文件不存在，設置為空字串
+if os.path.exists(data_docx_path):
+    doc = Document(data_docx_path)
+    texts = [para.text for para in doc.paragraphs if para.text.strip()]
+    vectorstore.add_texts(texts)
+    print("Successfully added document content to vector database.")
 else:
-    print(f"'data.docx' found at {data_docx_path}")
-    try:
-        database_content = load_docx_content(data_docx_path)
-        print("Successfully loaded database content.")
-    except Exception as e:
-        print(f"Error loading 'data.docx': {e}")
-        database_content = ""
+    print(f"Error: 'data.docx' not found at {data_docx_path}")
+
+# 初始化 OpenCC 轉換器
+cc = OpenCC('s2t')  # 簡轉繁
 
 @app.route('/')
 def index():
@@ -55,33 +50,16 @@ def get_response():
         if not user_input:
             return jsonify({'error': 'No user input provided'})
 
-        # 簡單關鍵字搜尋
-        if user_input.lower() in database_content.lower():
-            return jsonify({'response': f'找到相關內容：{user_input}'})
-
-        # 資料庫初始化
-        db_path = os.path.join(os.path.dirname(__file__), 'db', 'temp')
-        if not os.path.exists(db_path):
-            os.makedirs(db_path)
-
-        # 使用 GPT-4o 進行更深入的回答
-        embeddings = OpenAIEmbeddings(api_key=openai_api_key)
-        db = Chroma(persist_directory=db_path, embedding_function=embeddings)
-        docs = db.similarity_search(user_input)
-
+        # 使用向量檢索找到相關內容
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
         llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5, api_key=openai_api_key)
-        chain = load_qa_chain(llm, chain_type="stuff")
+        qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
 
-        with get_openai_callback() as cb:
-            response = chain.invoke({
-                "input_documents": docs,
-                "question": user_input
-            }, return_only_outputs=True)
+        # 執行檢索與回答
+        response = qa_chain.run(user_input)
 
-        cc = OpenCC('s2t')
-        answer = cc.convert(response['output_text'])
-        chat_history.append({'user': user_input, 'assistant': answer})
-
+        # 將回應轉為繁體中文
+        answer = cc.convert(response)
         return jsonify({'response': answer})
 
     except Exception as e:
