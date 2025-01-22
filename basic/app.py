@@ -3,10 +3,11 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_community.chains import RetrievalQA
+from langchain.chains import RetrievalQA  # 修正這一行
 from langchain_openai import ChatOpenAI
 from opencc import OpenCC
 from docx import Document
+
 
 # 載入 .env 環境變數
 load_dotenv()
